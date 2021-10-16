@@ -15,11 +15,11 @@ CBSDMODULE="convectix"
 readconf vm_vncwss.conf
 
 [ -z "${daemon_user}" ] && daemon_user="www"
-[ ! -f ${jailsysdir}/${jname}/vnc_port ] && err 1 "${N1_COLOR}No vnc_port file${N0_COLOR}"
+[ ! -f ${jailsysdir}/${jname}/vnc_port ] && log_err 1 "${N1_COLOR}No vnc_port file${N0_COLOR}"
 
 port=$( ${CAT_CMD} ${jailsysdir}/${jname}/vnc_port | ${AWK_CMD} '{printf $1}' )
 
-[ -z "${port}" ] && stderr 1 "${N1_COLOR}${CBSD_APP} no port for ${jname}${N0_COLOR}"
+[ -z "${port}" ] && log_err 1 "${N1_COLOR}${CBSD_APP} no port for ${jname}${N0_COLOR}"
 [ -z "${nodeip}" ] && nodeip="127.0.0.1"
 
 listen_v6=
@@ -51,7 +51,8 @@ ${SED_CMD} -e "s:%%PORT%%:${port}:g" \
 
 chmod +x /usr/local/etc/rc.d/clonos-vnc2wss
 
-${SERVICE_CMD} clonos-vnc2wss stop
+# it should be for PHP/ClonOS exec
+${SERVICE_CMD} clonos-vnc2wss stop > /dev/null 2>&1
 
 ${PS_CMD} -axfw -w -o pid,ucomm,command -ww | ${GREP_CMD} "6081 127.0.0.1" | while read _pid _ucomm _cmd; do
 	case "${_ucomm}" in
@@ -62,10 +63,9 @@ ${PS_CMD} -axfw -w -o pid,ucomm,command -ww | ${GREP_CMD} "6081 127.0.0.1" | whi
 done
 
 # todo: while/nc loop ?
-${SERVICE_CMD} clonos-vnc2wss start
+${SERVICE_CMD} clonos-vnc2wss start  > /dev/null 2>&1
 
 sleep 3
 
-${SERVICE_CMD} nginx reload
-
+${SERVICE_CMD} nginx reload  > /dev/null 2>&1
 exit 0
