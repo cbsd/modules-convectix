@@ -82,8 +82,8 @@ clonos_vnc2wss_status()
 {
 	local _err
 
-	if [ -f "${pidfile}" ]; then
-		pids=$( pgrep -F ${pidfile} 2>&1 )
+	if [ -f "${daemon_pidfile}" ]; then
+		pids=$( pgrep -F ${daemon_pidfile} 2>&1 )
 		_err=$?
 		if [ ${_err} -eq  0 ]; then
 			echo "${name} is running as pid ${pids}."
@@ -99,7 +99,19 @@ clonos_vnc2wss_status()
 
 clonos_vnc2wss_stop()
 {
-	if [ -f "${pidfile}" ]; then
+	if [ -f "${daemon_pidfile}" ]; then
+		pids=$( pgrep -F ${daemon_pidfile} 2>&1 )
+		_err=$?
+		if [ ${_err} -eq  0 ]; then
+			kill -9 ${pids} && /bin/rm -f ${daemon_pidfile}
+		else
+			echo "pgrep: ${pids}"
+			#return ${_err}
+		fi
+		rm -f ${daemon_pidfile}
+	fi
+
+	if [ -r "${pidfile}" ]; then
 		pids=$( pgrep -F ${pidfile} 2>&1 )
 		_err=$?
 		if [ ${_err} -eq  0 ]; then
@@ -109,18 +121,6 @@ clonos_vnc2wss_stop()
 			#return ${_err}
 		fi
 		rm -f ${pidfile}
-	fi
-
-	if [ -f "${pidfile_daemon}" ]; then
-		pids=$( pgrep -F ${pidfile_daemon} 2>&1 )
-		_err=$?
-		if [ ${_err} -eq  0 ]; then
-			kill -9 ${pids} && /bin/rm -f ${pidfile_daemon}
-		else
-			echo "pgrep: ${pids}"
-			#return ${_err}
-		fi
-		rm -f ${pidfile_daemon}
 	fi
 
 	return ${_err}
