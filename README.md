@@ -1,5 +1,6 @@
-# api
-CBSD module serving API service
+# cbsd-plugin-convectix
+
+Additional ConvectIX scripts for CBSD
 
 this module uses python, please install first, e.g:
 
@@ -7,6 +8,6 @@ this module uses python, please install first, e.g:
 
 To install module:
 
-  - cbsd module mode=install cbsd-plugin-convectix
+  - cbsd module mode=install convectix
   - echo 'convectix.d' >> ~cbsd/etc/modules.conf
   - cbsd initenv
