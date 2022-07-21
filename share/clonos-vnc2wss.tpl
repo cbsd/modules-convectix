@@ -99,6 +99,15 @@ clonos_vnc2wss_status()
 
 clonos_vnc2wss_stop()
 {
+
+	ps -axfw -w -o pid,ucomm,command -ww | grep "6081 127.0.0.1" | while read _pid _ucomm _cmd; do
+	case "${_ucomm}" in
+		python*)
+			kill -9 ${_pid}
+			;;
+	esac
+	done
+
 	if [ -f "${daemon_pidfile}" ]; then
 		pids=$( pgrep -F ${daemon_pidfile} 2>&1 )
 		_err=$?
