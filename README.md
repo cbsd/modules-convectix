@@ -4,7 +4,7 @@ Additional ConvectIX scripts for CBSD
 
 this module uses python, please install first, e.g:
 
-  `pkg install -y lang/python38`
+  `pkg install -y lang/python39 jq`
 
 To install module:
 

@@ -17,6 +17,8 @@ clonos=0
 case "${src}" in
 	cloud)
 			cache_file="${tmpdir}/bhyve-cloud.json"
+			# at the moment cloud = template, alias
+			src="template"
 			;;
 	template)
 			cache_file="${tmpdir}/bhyve-templates.json"
@@ -35,7 +37,7 @@ else
 	cache_file_size=0
 fi
 
-if [ -r ${cache_file} -a ${cache_file_size} -gt 0 ]; then
+if [ -r ${cache_file} -a ${cache_file_size} -gt 5 ]; then
 	${CAT_CMD} ${cache_file}
 else
 	if [ ${clonos} -eq 1 ]; then
