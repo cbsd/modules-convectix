@@ -48,7 +48,7 @@ logfile="${logdir}/${name}.log"
 
 command="/usr/sbin/daemon"
 procname="/usr/local/bin/bash"
-command_args="-r -P ${daemon_pidfile} -p ${pidfile} -o ${logfile} -S -l ${clonos_vnc2wss_facility} -s ${clonos_vnc2wss_priority} -T ${name} ${procname} /usr/local/www/clonos/public/novnc/utils/launch.sh --listen 6081 --vnc 127.0.0.1:%%PORT%%"
+command_args="-r -P ${daemon_pidfile} -p ${pidfile} -o ${logfile} -S -l ${clonos_vnc2wss_facility} -s ${clonos_vnc2wss_priority} -T ${name} ${procname} /usr/local/www/clonos/public/novnc/utils/novnc_proxy --listen 6081 --vnc 127.0.0.1:%%PORT%%"
 
 start_precmd="clonos_vnc2wss_precmd"
 stop_cmd=${name}_stop
