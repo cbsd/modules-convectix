@@ -89,7 +89,7 @@ if [ "${orig_authkey}" != "0" ]; then
 		${ECHO} "${N1_COLOR}Select authkey from database for: ${N2_COLOR}${orig_authkey}${N0_COLOR}"
 		authtmp=$( ${MKTEMP_CMD} )
 		${TRUNCATE_CMD} -s0 ${authtmp}
-		cbsdsqlro authkey "SELECT authkey FROM authkey WHERE name=\"${orig_authkey}\"" >> ${authtmp}
+		cbsdsqlro authkey "SELECT authkey FROM authkey WHERE name='${orig_authkey}'" >> ${authtmp}
 		authkey_file_size=$( /usr/bin/stat -f "%z" ${authtmp} 2>/dev/null )
 		if [ "${authkey_file_size}" = "0" ]; then
 			${ECHO} "${N1_COLOR}No such pubkey in database, rollback to FS: ${N2_COLOR}${sshdir}/authorized_keys${N0_COLOR}"
@@ -286,7 +286,7 @@ fi
 
 # Re-init MAC address even bclone reset it.
 #
-cbsdsqlrw ${jailsysdir}/${jname}/local.sqlite "UPDATE bhyvenic SET nic_hwaddr=\"0\""
+cbsdsqlrw ${jailsysdir}/${jname}/local.sqlite "UPDATE bhyvenic SET nic_hwaddr='0'"
 
 [ "${oastart}" = "1" ] && bstart ${jname}
 

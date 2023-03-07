@@ -13,7 +13,7 @@ EXTHELP="wf_bhyve"
 . ${system}
 . ${subrdir}/bhyve.subr
 
-dsk_sql=$( cbsdsqlro ${jailsysdir}/${jname}/local.sqlite "SELECT dsk_path FROM bhyvedsk WHERE jname=\"${jname}\" AND dsk_path=\"${dsk}\"" 2>/dev/null );
+dsk_sql=$( cbsdsqlro ${jailsysdir}/${jname}/local.sqlite "SELECT dsk_path FROM bhyvedsk WHERE jname='${jname}' AND dsk_path='${dsk}'" 2>/dev/null );
 
 [ -z "${dsk_sql}" ] && err 1 "${N1_COLOR}No such SQL records for: ${N2_COLOR}${dsk}${N1_COLOR} storage for ${N2_COLOR}${jname}${N0_COLOR}"
 
@@ -40,7 +40,7 @@ fi
 zfsdev=
 pool=
 
-eval $( /sbin/zpool import -N |${EGREP_CMD} -E "(pool: )|(md0.*ONLINE$)" |${AWK_CMD} '{printf $1" "$2"\n"}' |while read _x _y; do
+eval $( /sbin/zpool import -N |${EGREP_CMD} -E "(pool: )|(md0.*ONLINE$)" | ${AWK_CMD} '{printf $1" "$2"\n"}' |while read _x _y; do
 	[ -z "${_x}" -o -z "${_y}" ] && continue
 	[ "${_x}" = "pool:" ] && echo "pool=${_y}"
 	[ "${_y}" = "ONLINE" ] && echo "zfsdev=${_x}"
