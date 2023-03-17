@@ -19,7 +19,15 @@ upgrade_packages()
 			/root/bin/upgrade.sh
 			;;
 		0)
-			/root/bin/upgrade.sh start
+			#/root/bin/upgrade.sh start
+			echo "Upgrade in progress..."
+			for i in $( seq 1 5 ); do
+				echo "Phase ${i}..."
+				sleep 1
+			done
+#			[ -r /var/spool/myb/state.conf ] && ${RM_CMD} -f /var/spool/myb/state.conf
+#			[ -r /var/spool/myb/last_result.txt ] && ${RM_CMD} -f /var/spool/myb/last_result.txt
+#			/root/bin/upgrade.sh
 			;;
 		*)
 			err 1 "${W1_COLOR}${CBSD_APP}: ${N1_COLOR}unknown dryrun: ${N2_COLOR}${dryrun}${N0_COLOR}"
@@ -55,6 +63,11 @@ case "${mode}" in
 		list_packages
 		;;
 	upgrade)
+		dryrun=0
+		upgrade_packages
+		;;
+	check_upgrade)
+		dryrun=1
 		upgrade_packages
 		;;
 	*)
