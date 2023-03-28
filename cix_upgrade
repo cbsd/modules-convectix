@@ -32,7 +32,7 @@ upgrade_packages()
 				if [ -z "${cbsd_queue_backend}" ]; then
 					MOD_CBSD_QUEUE_DISABLED="1"
 				else
-					[ -n "${cbsd_jail_queue_name}" ] && ${cbsd_queue_backend} cbsd_queue_name=${cbsd_settings_queue_name} id=update cmd=update status=1 workdir="${workdir}"
+					[ -n "${cbsd_jail_queue_name}" ] && ${cbsd_queue_backend} cbsd_queue_name=${cbsd_settings_queue_name} id=update cmd=update status=1 workdir="${workdir}" jname="starting..."
 				fi
 			fi
 
@@ -44,7 +44,7 @@ upgrade_packages()
 						MOD_CBSD_QUEUE_DISABLED="1"
 					else
 						p=$(( 15 * i ))
-						[ -n "${cbsd_jail_queue_name}" ] && ${cbsd_queue_backend} cbsd_queue_name=${cbsd_settings_queue_name} id=update cmd=update status=${p} workdir="${workdir}"
+						[ -n "${cbsd_jail_queue_name}" ] && ${cbsd_queue_backend} cbsd_queue_name=${cbsd_settings_queue_name} id=update cmd=update status=${p} workdir="${workdir}" jname="update phase ${i}/5.."
 					fi
 			fi
 				sleep 1
@@ -58,7 +58,7 @@ upgrade_packages()
 				if [ -z "${cbsd_queue_backend}" ]; then
 					MOD_CBSD_QUEUE_DISABLED="1"
 				else
-					[ -n "${cbsd_jail_queue_name}" ] && ${cbsd_queue_backend} cbsd_queue_name=${cbsd_settings_queue_name} id=update cmd=update status=100 workdir="${workdir}"
+					[ -n "${cbsd_jail_queue_name}" ] && ${cbsd_queue_backend} cbsd_queue_name=${cbsd_settings_queue_name} id=update cmd=update status=100 workdir="${workdir}" jname="complete"
 				fi
 			fi
 			;;
