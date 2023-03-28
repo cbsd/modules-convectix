@@ -3,7 +3,13 @@
 MYARG="mode"
 MYOPTARG="dryrun"
 MYDESC="Upgrade MyB/ClonOS via pkg"
-ADDHELP="dryrun - (1 - default ) chech for updates only"
+ADDHELP="
+ dryrun             - (1 - default ) chech for updates only;
+ mode=list          - list current packages;
+ mode=check_upgrade - dryrun/show available updates;
+ mode=upgrade       - upgrade;
+
+"
 
 . ${subr}
 dryrun=1
@@ -20,14 +26,41 @@ upgrade_packages()
 			;;
 		0)
 			#/root/bin/upgrade.sh start
+			# CBSD QUEUE
+			if [ "${mod_cbsd_queue_enabled}" = "YES" -a -z "${MOD_CBSD_QUEUE_DISABLED}" ]; then
+				readconf cbsd_queue.conf
+				if [ -z "${cbsd_queue_backend}" ]; then
+					MOD_CBSD_QUEUE_DISABLED="1"
+				else
+					[ -n "${cbsd_jail_queue_name}" ] && ${cbsd_queue_backend} cbsd_queue_name=${cbsd_settings_queue_name} id=update cmd=update status=1 workdir="${workdir}"
+				fi
+			fi
+
 			echo "Upgrade in progress..."
 			for i in $( seq 1 5 ); do
 				echo "Phase ${i}..."
+				if [ "${mod_cbsd_queue_enabled}" = "YES" -a -z "${MOD_CBSD_QUEUE_DISABLED}" ]; then
+					if [ -z "${cbsd_queue_backend}" ]; then
+						MOD_CBSD_QUEUE_DISABLED="1"
+					else
+						p=$(( 15 * i ))
+						[ -n "${cbsd_jail_queue_name}" ] && ${cbsd_queue_backend} cbsd_queue_name=${cbsd_settings_queue_name} id=update cmd=update status=${p} workdir="${workdir}"
+					fi
+			fi
 				sleep 1
 			done
 #			[ -r /var/spool/myb/state.conf ] && ${RM_CMD} -f /var/spool/myb/state.conf
 #			[ -r /var/spool/myb/last_result.txt ] && ${RM_CMD} -f /var/spool/myb/last_result.txt
+
 #			/root/bin/upgrade.sh
+
+			if [ "${mod_cbsd_queue_enabled}" = "YES" -a -z "${MOD_CBSD_QUEUE_DISABLED}" ]; then
+				if [ -z "${cbsd_queue_backend}" ]; then
+					MOD_CBSD_QUEUE_DISABLED="1"
+				else
+					[ -n "${cbsd_jail_queue_name}" ] && ${cbsd_queue_backend} cbsd_queue_name=${cbsd_settings_queue_name} id=update cmd=update status=100 workdir="${workdir}"
+				fi
+			fi
 			;;
 		*)
 			err 1 "${W1_COLOR}${CBSD_APP}: ${N1_COLOR}unknown dryrun: ${N2_COLOR}${dryrun}${N0_COLOR}"
