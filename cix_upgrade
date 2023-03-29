@@ -83,12 +83,12 @@ list_packages()
 	cbsd_api=$( ${PKG_CMD} info cbsd-mq-api 2>/dev/null | ${GREP_CMD} ^Version | ${CUT_CMD} -d : -f 2 | ${AWK_CMD} '{printf $1}' )
 	cbsd_router=$( ${PKG_CMD} info cbsd-mq-router 2>/dev/null | ${GREP_CMD} ^Version | ${CUT_CMD} -d : -f 2 | ${AWK_CMD} '{printf $1}' )
 
-	[ -n "${cbsd_ver}" ] && echo "CBSD ${cbsd_ver}"
-	[ -n "${cbsd_api}" ] && echo "CBSD API ${cbsd_api}"
-	[ -n "${cbsd_router}" ] && echo "CBSD Router ${cbsd_router}"
-	[ -n "${php_ver}" ] && echo "PHP ${php_ver}"
-	[ -n "${myb_ver}" ] && echo "MyBee ${myb_ver}"
-	[ -n "${clonos_ver}" ] && echo "ClonOS ${clonos_ver}"
+	[ -n "${cbsd_ver}" ] && echo "CBSD: ${cbsd_ver}"
+	[ -n "${cbsd_api}" ] && echo "CBSD API: ${cbsd_api}"
+	[ -n "${cbsd_router}" ] && echo "CBSD Router: ${cbsd_router}"
+	[ -n "${php_ver}" ] && echo "PHP: ${php_ver}"
+	[ -n "${myb_ver}" ] && echo "MyBee: ${myb_ver}"
+	[ -n "${clonos_ver}" ] && echo "ClonOS: ${clonos_ver}"
 }
 
 case "${mode}" in
