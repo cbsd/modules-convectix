@@ -88,6 +88,7 @@ list_packages()
 	[ -z "${GREP_CMD}" ] && GREP_CMD=$( which grep )
 	[ -z "${SED_CMD}" ] && SED_CMD=$( which sed )
 	[ -z "${TRUNCATE_CMD}" ] && TRUNCATE_CMD=$( which truncate )
+	[ -z "${CAT_CMD}" ] && CAT_CMD=$( which cat )
 
 	PATH="${OPATH}"
 
@@ -117,7 +118,7 @@ list_packages()
 		component=$( echo ${i} | ${SED_CMD} 's:_ver::g' )
 
 		if [ ${save_repo} -eq 1 ]; then
-			printf "${component}_new=\"${_val}\"\n" >>${STD_OUT}
+			printf "${component}_ver_new=\"${_val}\"\n" >>${STD_OUT}
 		else
 			if [ ${json} -eq 0 ]; then
 				printf "${component}: ${_val}\n" >>${STD_OUT}
@@ -135,7 +136,7 @@ list_packages()
 
 	[ ${json} -eq 0 ] && return 0
 
-	cat >>${STD_OUT_JSON} <<EOF
+	${CAT_CMD} >>${STD_OUT_JSON} <<EOF
 {
   "installed": {
 EOF
@@ -160,9 +161,44 @@ EOF
 		return 0
 	fi
 
-	cat <<EOF
+	[ -r /tmp/clonos_ver.conf ] && . /tmp/clonos_ver.conf
+
+	${CAT_CMD} <<EOF
   },
   "latest": {
+EOF
+
+	latest_component_num=0
+	current_component_num=0
+
+	for i in ${installed_component}; do
+		current_component=$(( current_component + 1 ))
+		_val=
+		eval _val="\$$i"
+		[ -z "${_val}" ] && continue
+		i_new="${i}_new"
+		eval _val_new="\$$i_new"
+		[ -z "${_val_new}" ] && continue
+		if [ "${_val_new}" != "${_val}" ]; then
+			latest_component_num=$(( latest_component_num + 1 ))
+			eval latest_param${latest_component_num}="\"${i}\""
+			eval latest_val${latest_component_num}="${_val_new}"
+		fi
+	done
+
+	while [ ${current_component_num} -ne ${latest_component_num} ]; do
+		current_component_num=$(( current_component_num + 1 ))
+		eval _par="\$latest_param${current_component_num}"
+		eval _val="\$latest_val${current_component_num}"
+		component=$( echo ${_par} | ${SED_CMD} 's:_ver::g' )
+		if [ ${current_component_num} -eq ${latest_component_num} ]; then
+			printf "    \"${component}\": \"${_val}\"\n" >>${STD_OUT_JSON}
+		else
+			printf "    \"${component}\": \"${_val}\",\n" >>${STD_OUT_JSON}
+		fi
+
+	done
+	${CAT_CMD} <<EOF
   }
 }
 EOF
