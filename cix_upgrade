@@ -6,6 +6,7 @@ MYDESC="Upgrade MyB/ClonOS via pkg"
 ADDHELP="
  dryrun             - (1 - default ) chech for updates only;
  mode=list          - list current packages;
+ mode=listjson      - list current/available packages in JSON;
  mode=check_upgrade - dryrun/show available updates;
  mode=upgrade       - upgrade;
 
@@ -68,11 +69,19 @@ upgrade_packages()
 	esac
 }
 
+## SYNC WITH CPR/Build
 list_packages()
 {
 	local OPATH="${PATH}"
 	PATH="/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/sbin:/usr/local/bin"
+
 	[ -z "${PKG_CMD}" ] && PKG_CMD=$( which pkg || which pkg-static )
+	[ -z PKG_CMD ] && PKG_CMD=$( which pkg )
+	[ -z CUT_CMD ] && CUT_CMD=$( which cut )
+	[ -z AWK_CMD ] && AWK_CMD=$( which awk )
+	[ -z GREP_CMD ] && GREP_CMD=$( which grep )
+	[ -z SED_CMD ] && SED_CMD=$( which sed )
+
 	PATH="${OPATH}"
 
 	cbsd_ver=$( /usr/local/bin/cbsd version 2>/dev/null | ${AWK_CMD} '{printf $1}' )
@@ -83,19 +92,69 @@ list_packages()
 	myb_ver=$( ${PKG_CMD} info myb 2>/dev/null | ${GREP_CMD} ^Version | ${CUT_CMD} -d : -f 2 | ${AWK_CMD} '{printf $1}' )
 	clonos_ver=$( ${PKG_CMD} info clonos 2>/dev/null | ${GREP_CMD} ^Version | ${CUT_CMD} -d : -f 2 | ${AWK_CMD} '{printf $1}' )
 
-	cbsd_api=$( ${PKG_CMD} info cbsd-mq-api 2>/dev/null | ${GREP_CMD} ^Version | ${CUT_CMD} -d : -f 2 | ${AWK_CMD} '{printf $1}' )
-	cbsd_router=$( ${PKG_CMD} info cbsd-mq-router 2>/dev/null | ${GREP_CMD} ^Version | ${CUT_CMD} -d : -f 2 | ${AWK_CMD} '{printf $1}' )
+	cbsd_api_ver=$( ${PKG_CMD} info cbsd-mq-api 2>/dev/null | ${GREP_CMD} ^Version | ${CUT_CMD} -d : -f 2 | ${AWK_CMD} '{printf $1}' )
+	cbsd_router_ver=$( ${PKG_CMD} info cbsd-mq-router 2>/dev/null | ${GREP_CMD} ^Version | ${CUT_CMD} -d : -f 2 | ${AWK_CMD} '{printf $1}' )
 
-	[ -n "${cbsd_ver}" ] && echo "CBSD: ${cbsd_ver}"
-	[ -n "${cbsd_api}" ] && echo "CBSD API: ${cbsd_api}"
-	[ -n "${cbsd_router}" ] && echo "CBSD Router: ${cbsd_router}"
-	[ -n "${php_ver}" ] && echo "PHP: ${php_ver}"
-	[ -n "${myb_ver}" ] && echo "MyBee: ${myb_ver}"
-	[ -n "${clonos_ver}" ] && echo "ClonOS: ${clonos_ver}"
+	installed_component=
+
+	for i in cbsd_api_ver cbsd_router_ver cbsd_ver clonos_ver myb_ver php_ver; do
+		_val=
+		eval _val="\$$i"
+		[ -z "${_val}" ] && continue
+		component=$( echo ${i} | ${SED_CMD} 's:_ver::g' )
+
+		if [ ${json} -eq 0 ]; then
+			printf "${component}: ${_val}\n"
+			continue
+		fi
+
+		if [ -z "${installed_component}" ]; then
+			installed_component="${i}"
+		else
+			installed_component="${installed_component} ${i}"
+		fi
+		installed_component_num=$(( installed_component_num + 1 ))
+	done
+
+	[ ${json} -eq 0 ] && return 0
+
+	cat <<EOF
+{
+  "installed": {
+EOF
+
+	current_component=0
+	for i in ${installed_component}; do
+		current_component=$(( current_component + 1 ))
+		_val=
+		eval _val="\$$i"
+		[ -z "${_val}" ] && continue
+		component=$( echo ${i} | ${SED_CMD} 's:_ver::g' )
+		if [ ${current_component} -eq ${installed_component_num} ]; then
+			printf "    \"${component}\": \"${_val}\"\n"
+		else
+			printf "    \"${component}\": \"${_val}\",\n"
+		fi
+	done
+
+	cat <<EOF
+  },
+  "latest": {
+  }
 }
+EOF
+
+}
+
+#### MAIN
+json=0
 
 case "${mode}" in
 	list)
+		list_packages
+		;;
+	listjson)
+		json=1
 		list_packages
 		;;
 	upgrade)
