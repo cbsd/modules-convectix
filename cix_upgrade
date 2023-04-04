@@ -72,17 +72,30 @@ upgrade_packages()
 ## SYNC WITH CPR/Build
 list_packages()
 {
+	local STD_OUT="/dev/stdout"
+	local STD_OUT_JSON="/dev/stdout"
+
+	[ -z "${json}" ] && json="1"
+	[ -z "${save_repo}" ] && save_repo="1"
+
 	local OPATH="${PATH}"
 	PATH="/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/sbin:/usr/local/bin"
 
 	[ -z "${PKG_CMD}" ] && PKG_CMD=$( which pkg || which pkg-static )
-	[ -z PKG_CMD ] && PKG_CMD=$( which pkg )
-	[ -z CUT_CMD ] && CUT_CMD=$( which cut )
-	[ -z AWK_CMD ] && AWK_CMD=$( which awk )
-	[ -z GREP_CMD ] && GREP_CMD=$( which grep )
-	[ -z SED_CMD ] && SED_CMD=$( which sed )
+	[ -z "${PKG_CMD}" ] && PKG_CMD=$( which pkg )
+	[ -z "${CUT_CMD}" ] && CUT_CMD=$( which cut )
+	[ -z "${AWK_CMD}" ] && AWK_CMD=$( which awk )
+	[ -z "${GREP_CMD}" ] && GREP_CMD=$( which grep )
+	[ -z "${SED_CMD}" ] && SED_CMD=$( which sed )
+	[ -z "${TRUNCATE_CMD}" ] && TRUNCATE_CMD=$( which truncate )
 
 	PATH="${OPATH}"
+
+	if [ ${save_repo} -eq 1 ]; then
+		STD_OUT="/tmp/clonos_ver.conf"
+		STD_OUT_JSON="/tmp/clonos_ver.json"
+		${TRUNCATE_CMD} -s0 ${STD_OUT} ${STD_OUT_JSON}
+	fi
 
 	cbsd_ver=$( /usr/local/bin/cbsd version 2>/dev/null | ${AWK_CMD} '{printf $1}' )
 	if [ -z "${cbsd_ver}" ]; then
@@ -103,9 +116,13 @@ list_packages()
 		[ -z "${_val}" ] && continue
 		component=$( echo ${i} | ${SED_CMD} 's:_ver::g' )
 
-		if [ ${json} -eq 0 ]; then
-			printf "${component}: ${_val}\n"
-			continue
+		if [ ${save_repo} -eq 1 ]; then
+			printf "${component}_new=\"${_val}\"\n" >>${STD_OUT}
+		else
+			if [ ${json} -eq 0 ]; then
+				printf "${component}: ${_val}\n" >>${STD_OUT}
+				continue
+			fi
 		fi
 
 		if [ -z "${installed_component}" ]; then
@@ -118,7 +135,7 @@ list_packages()
 
 	[ ${json} -eq 0 ] && return 0
 
-	cat <<EOF
+	cat >>${STD_OUT_JSON} <<EOF
 {
   "installed": {
 EOF
@@ -131,11 +148,17 @@ EOF
 		[ -z "${_val}" ] && continue
 		component=$( echo ${i} | ${SED_CMD} 's:_ver::g' )
 		if [ ${current_component} -eq ${installed_component_num} ]; then
-			printf "    \"${component}\": \"${_val}\"\n"
+			printf "    \"${component}\": \"${_val}\"\n" >>${STD_OUT_JSON}
 		else
-			printf "    \"${component}\": \"${_val}\",\n"
+			printf "    \"${component}\": \"${_val}\",\n" >>${STD_OUT_JSON}
 		fi
 	done
+
+	if [ ${save_repo} -eq 1 ]; then
+		echo "  }" >>${STD_OUT_JSON}
+		echo "}" >>${STD_OUT_JSON}
+		return 0
+	fi
 
 	cat <<EOF
   },
@@ -147,7 +170,9 @@ EOF
 }
 
 #### MAIN
+# Keep in sync with CPR!
 json=0
+save_repo=0
 
 case "${mode}" in
 	list)
@@ -165,6 +190,10 @@ case "${mode}" in
 		dryrun=1
 		upgrade_packages
 		;;
+	repo)
+		json=1
+		save_repo=1
+		list_packages
 	*)
 		err 1 "${W1_COLOR}${CBSD_APP}: ${N1_COLOR}unknown mode: ${N2_COLOR}${mode}${N0_COLOR}"
 		;;
