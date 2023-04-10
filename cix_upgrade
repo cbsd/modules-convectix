@@ -26,8 +26,8 @@ upgrade_packages()
 			/root/bin/upgrade.sh
 			;;
 		0)
-			#/root/bin/upgrade.sh start
-			# CBSD QUEUE
+			# not for DEV server:
+			myhost=$( ${HOSTNAME_CMD} | ${AWK_CMD} '{printf $1}' )
 			if [ "${mod_cbsd_queue_enabled}" = "YES" -a -z "${MOD_CBSD_QUEUE_DISABLED}" ]; then
 				readconf cbsd_queue.conf
 				if [ -z "${cbsd_queue_backend}" ]; then
@@ -37,23 +37,27 @@ upgrade_packages()
 				fi
 			fi
 
-			echo "Upgrade in progress..."
-			for i in $( seq 1 5 ); do
-				echo "Phase ${i}..."
-				if [ "${mod_cbsd_queue_enabled}" = "YES" -a -z "${MOD_CBSD_QUEUE_DISABLED}" ]; then
-					if [ -z "${cbsd_queue_backend}" ]; then
-						MOD_CBSD_QUEUE_DISABLED="1"
-					else
-						p=$(( 15 * i ))
-						[ -n "${cbsd_jail_queue_name}" ] && ${cbsd_queue_backend} cbsd_queue_name=${cbsd_settings_queue_name} id=update cmd=update status=${p} workdir="${workdir}" jname="0" data_msg="update phase ${i}/5.."
-					fi
-			fi
+			if [ -z "${myhost}" -o "${myhost}" = "home.olevole.ru" ]; then
+				echo "Dev server"
+				echo "Upgrade in progress..."
+				for i in $( seq 1 5 ); do
+					echo "Phase ${i}..."
+					if [ "${mod_cbsd_queue_enabled}" = "YES" -a -z "${MOD_CBSD_QUEUE_DISABLED}" ]; then
+						if [ -z "${cbsd_queue_backend}" ]; then
+							MOD_CBSD_QUEUE_DISABLED="1"
+						else
+							p=$(( 15 * i ))
+							[ -n "${cbsd_jail_queue_name}" ] && ${cbsd_queue_backend} cbsd_queue_name=${cbsd_settings_queue_name} id=update cmd=update status=${p} workdir="${workdir}" jname="0" data_msg="update phase ${i}/5.."
+						fi
+				fi
 				sleep 1
-			done
+				done
+			else
+				/root/bin/upgrade.sh start
+			fi
+
 #			[ -r /var/spool/myb/state.conf ] && ${RM_CMD} -f /var/spool/myb/state.conf
 #			[ -r /var/spool/myb/last_result.txt ] && ${RM_CMD} -f /var/spool/myb/last_result.txt
-
-#			/root/bin/upgrade.sh
 
 			if [ "${mod_cbsd_queue_enabled}" = "YES" -a -z "${MOD_CBSD_QUEUE_DISABLED}" ]; then
 				if [ -z "${cbsd_queue_backend}" ]; then
@@ -161,7 +165,7 @@ EOF
 		return 0
 	fi
 
-	[ -r /tmp/clonos_ver.conf ] && . /tmp/clonos_ver.conf
+	[ -r ${cache_file} ] && . ${cache_file}
 
 	${CAT_CMD} <<EOF
   },
@@ -210,11 +214,19 @@ EOF
 json=0
 save_repo=0
 
+cache_file="/tmp/clonos_ver2.conf"
+
 case "${mode}" in
 	list)
 		list_packages
 		;;
 	listjson)
+		cache_file="/tmp/clonos_ver2.conf"
+		json=1
+		list_packages
+		;;
+	listjson2)
+		cache_file="/tmp/clonos_ver2.conf"
 		json=1
 		list_packages
 		;;
