@@ -235,10 +235,12 @@ case "${mode}" in
 		_res=$( timeout 10 ${FETCH_CMD} -o ${cache_file} ${URL} 2>&1 )
 		ret=$?
 		if [ ${ret} -eq 0 ]; then
-			echo "done"
+			cache_file="/tmp/cix_upgrade_latest.conf"
+			json=1
+			list_packages
 		else
 			${RM_CMD} -f ${cache_file}
-			err 1 "Error: ${_res}"
+			err 1 "check_uprade fetch error: ${_res}"
 		fi
 		;;
 	repo)
