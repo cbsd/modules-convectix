@@ -231,7 +231,7 @@ case "${mode}" in
 #		upgrade_packages
 #		;;
 	check_upgrade)
-		URL="https://clonos-pkg.convectix.com/FreeBSD:13:amd64/latest/clonos_ver.conf"
+		URL="https://clonos-pkg.convectix.com/FreeBSD:14:amd64/latest/clonos_ver.conf"
 		_res=$( timeout 10 ${FETCH_CMD} -o ${cache_file} ${URL} 2>&1 )
 		ret=$?
 		if [ ${ret} -eq 0 ]; then
